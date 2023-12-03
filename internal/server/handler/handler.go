@@ -63,7 +63,7 @@ func (h *ServerHandler) UpdateMetric(res http.ResponseWriter, req *http.Request)
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusBadRequest)
 		}
-		err = h.Repository.Update(memType, metric, v)
+		err = h.Repository.Update(memType, metric, int64(v))
 		if err != nil {
 			http.Error(res, "http.StatusBadRequest", http.StatusBadRequest)
 		}
