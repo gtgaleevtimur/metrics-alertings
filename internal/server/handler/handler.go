@@ -11,10 +11,12 @@ import (
 func NewServerRouter(repository repository.ServerStorager) *chi.Mux {
 	controller := newServerHandler(repository)
 	router := chi.NewRouter()
-	router.Get("/", controller.Main)
+	router.Get("/", controller.MainPage)
 	router.Post("/update/{type}/{metric}/{value}", controller.UpdateMetric)
 	router.Get("/value/gauge/{metric}", controller.GetMetric)
 	router.Get("/value/counter/{metric}", controller.GetMetric)
+	router.MethodNotAllowedHandler()
+	router.NotFoundHandler()
 	return router
 }
 
@@ -28,7 +30,7 @@ func newServerHandler(repository repository.ServerStorager) *ServerHandler {
 	}
 }
 
-func (h *ServerHandler) Main(res http.ResponseWriter, req *http.Request) {
+func (h *ServerHandler) MainPage(res http.ResponseWriter, req *http.Request) {
 	body := `
 <!DOCTYPE html>
 <html>
