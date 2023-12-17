@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -57,5 +58,8 @@ func (c *Config) ParseFlags() {
 	if flag.NArg() > 0 {
 		flag.Usage()
 		os.Exit(1)
+	}
+	if !strings.Contains(c.ServerAddress, "http://") || !strings.Contains(c.ServerAddress, "https://") {
+		c.ServerAddress = strings.Join([]string{"http://", c.ServerAddress}, "")
 	}
 }

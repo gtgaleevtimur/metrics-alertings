@@ -8,12 +8,6 @@ import (
 	"time"
 )
 
-const (
-	pollInterval               = 2 * time.Second
-	reportInterval             = 10 * time.Second
-	updateServerAddress string = "http://localhost:8080/update/"
-)
-
 func Run() {
 	storager := repository.NewAgentMemStorage()
 	conf := config.NewConfig(config.WithParseConfig())
