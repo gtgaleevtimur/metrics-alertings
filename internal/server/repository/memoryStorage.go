@@ -1,4 +1,4 @@
-package memory
+package repository
 
 import "fmt"
 
@@ -6,7 +6,7 @@ type ServerMemStorage struct {
 	Data map[string]interface{}
 }
 
-func NewServerMemStorage() *ServerMemStorage {
+func NewServerMemStorage() ServerStorager {
 	return &ServerMemStorage{
 		Data: make(map[string]interface{}),
 	}
