@@ -9,8 +9,8 @@ import (
 )
 
 func Run() {
-	storager := repository.NewAgentMemStorage()
 	conf := config.NewConfig(config.WithParseConfig())
+	storager := repository.NewAgentMemStorage()
 
 	go func() {
 		for {
