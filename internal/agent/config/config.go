@@ -59,7 +59,7 @@ func (c *Config) ParseFlags() {
 		flag.Usage()
 		os.Exit(1)
 	}
-	if !strings.Contains(c.ServerAddress, "http://") || !strings.Contains(c.ServerAddress, "https://") {
+	if !strings.Contains(c.ServerAddress, "http://") && !strings.Contains(c.ServerAddress, "https://") {
 		c.ServerAddress = strings.Join([]string{"http://", c.ServerAddress}, "")
 	}
 }
