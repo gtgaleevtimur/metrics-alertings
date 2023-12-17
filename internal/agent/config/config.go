@@ -52,8 +52,8 @@ func WithParseConfig() Option {
 
 func (c *Config) ParseFlags() {
 	flag.StringVar(&c.ServerAddress, "a", c.ServerAddress, "SERVER_ADDRESS")
-	flag.DurationVar(&c.ReportInterval, "r", c.ReportInterval, "REPORT_INTERVAL")
-	flag.DurationVar(&c.PollInterval, "p", c.PollInterval, "POLL_INTERVAL")
+	reportInterval := flag.Int("r", 10, "REPORT_INTERVAL")
+	pollInterval := flag.Int("p", 2, "POLL_INTERVAL")
 	flag.Parse()
 	if flag.NArg() > 0 {
 		flag.Usage()
@@ -62,4 +62,6 @@ func (c *Config) ParseFlags() {
 	if !strings.Contains(c.ServerAddress, "http://") && !strings.Contains(c.ServerAddress, "https://") {
 		c.ServerAddress = strings.Join([]string{"http://", c.ServerAddress}, "")
 	}
+	c.ReportInterval = time.Second * time.Duration(*reportInterval)
+	c.PollInterval = time.Second * time.Duration(*pollInterval)
 }
