@@ -3,6 +3,7 @@ module github.com/gtgaleevtimur/metrics-alertings
 go 1.21.1
 
 require (
+	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/go-chi/chi v1.5.5
 	github.com/gojek/heimdall/v7 v7.0.2
 	github.com/stretchr/testify v1.8.4

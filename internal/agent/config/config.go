@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"github.com/caarlos0/env"
 	"os"
 	"strings"
 	"sync"
@@ -16,9 +17,9 @@ const (
 
 type (
 	Config struct {
-		ServerAddress  string
-		PollInterval   time.Duration
-		ReportInterval time.Duration
+		ServerAddress  string        `env:"ADDRESS"`
+		PollInterval   time.Duration `env:"POLL_INTERVAL"`
+		ReportInterval time.Duration `env:"REPORT_INTERVAL"`
 	}
 
 	Option func(*Config)
@@ -46,12 +47,13 @@ func NewConfig(options ...Option) *Config {
 
 func WithParseConfig() Option {
 	return func(c *Config) {
+		env.Parse(c)
 		c.ParseFlags()
 	}
 }
 
 func (c *Config) ParseFlags() {
-	flag.StringVar(&c.ServerAddress, "a", c.ServerAddress, "SERVER_ADDRESS")
+	flag.StringVar(&c.ServerAddress, "a", c.ServerAddress, "ADDRESS")
 	reportInterval := flag.Int("r", 10, "REPORT_INTERVAL")
 	pollInterval := flag.Int("p", 2, "POLL_INTERVAL")
 	flag.Parse()

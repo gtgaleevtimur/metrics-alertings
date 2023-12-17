@@ -4,6 +4,8 @@ import (
 	"flag"
 	"os"
 	"sync"
+
+	"github.com/caarlos0/env"
 )
 
 const (
@@ -12,7 +14,7 @@ const (
 
 type (
 	Config struct {
-		ServerAddress string
+		ServerAddress string `env:"ADDRESS"`
 	}
 
 	Option func(*Config)
@@ -38,12 +40,13 @@ func NewConfig(options ...Option) *Config {
 
 func WithParseConfig() Option {
 	return func(c *Config) {
+		env.Parse(c)
 		c.ParseFlags()
 	}
 }
 
 func (c *Config) ParseFlags() {
-	flag.StringVar(&c.ServerAddress, "a", c.ServerAddress, "SERVER_ADDRESS")
+	flag.StringVar(&c.ServerAddress, "a", c.ServerAddress, "ADDRESS")
 	flag.Parse()
 	if flag.NArg() > 0 {
 		flag.Usage()
