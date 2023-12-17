@@ -25,8 +25,8 @@ func TestMainPage(t *testing.T) {
 		require.NoError(t, err)
 		client := &http.Client{}
 		resp, err := client.Do(request)
-		defer resp.Body.Close()
 		require.NoError(t, err)
+		defer resp.Body.Close()
 		assert.Equal(t, "text/html; charset=utf-8", resp.Header.Get("Content-Type"))
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 	})
@@ -84,8 +84,8 @@ func TestGetMetric(t *testing.T) {
 		require.NoError(t, err)
 		client := &http.Client{}
 		resp, err := client.Do(request)
-		defer resp.Body.Close()
 		require.NoError(t, err)
+		defer resp.Body.Close()
 		assert.Equal(t, "text/plain; charset=utf-8", resp.Header.Get("Content-Type"))
 		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 	})
@@ -98,8 +98,8 @@ func TestGetMetric(t *testing.T) {
 		require.NoError(t, err)
 		client := &http.Client{}
 		resp, err := client.Do(request)
-		defer resp.Body.Close()
 		require.NoError(t, err)
+		defer resp.Body.Close()
 		assert.Equal(t, "text/plain; charset=utf-8", resp.Header.Get("Content-Type"))
 		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 	})
