@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	"github.com/gtgaleevtimur/metrics-alertings/internal/server/repository"
 	"net/http"
 	"strconv"
@@ -17,6 +18,9 @@ func NewServerRouter(repository repository.ServerStorager) *chi.Mux {
 	router.Get("/value/counter/{metric}", controller.GetMetric)
 	router.MethodNotAllowedHandler()
 	router.NotFoundHandler()
+	router.Use(middleware.RealIP)
+	router.Use(middleware.Logger)
+	router.Use(middleware.Recoverer)
 	return router
 }
 

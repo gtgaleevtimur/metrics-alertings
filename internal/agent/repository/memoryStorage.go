@@ -5,11 +5,13 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
-	"net/url"
 	"runtime"
+	"time"
+
+	"github.com/gojek/heimdall/v7/httpclient"
 )
 
-var contentType = url.Values{"Content-type": {"text/plain"}}
+var contentType = http.Header{"Content-type": {"text/plain"}}
 
 type AgentMemStorage struct {
 	Gauge   map[string]float64
@@ -60,7 +62,8 @@ func (m *AgentMemStorage) UpdateMemStorage() {
 func (m *AgentMemStorage) SendMetrics(addr string) error {
 	for k, v := range m.Gauge {
 		req := fmt.Sprintf("%sgauge/%v/%v", addr, k, v)
-		res, err := http.PostForm(req, contentType)
+		client := httpclient.NewClient(httpclient.WithHTTPTimeout(1000 * time.Millisecond))
+		res, err := client.Post(req, nil, contentType)
 		if err != nil {
 			return err
 		}
@@ -78,7 +81,8 @@ func (m *AgentMemStorage) SendMetrics(addr string) error {
 	}
 	for k, v := range m.Counter {
 		req := fmt.Sprintf("%scounter/%v/%v", addr, k, v)
-		res, err := http.PostForm(req, contentType)
+		client := httpclient.NewClient(httpclient.WithHTTPTimeout(1000 * time.Millisecond))
+		res, err := client.Post(req, nil, contentType)
 		if err != nil {
 			return err
 		}
