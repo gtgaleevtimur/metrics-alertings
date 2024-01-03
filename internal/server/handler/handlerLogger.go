@@ -1,54 +1,79 @@
 package handler
 
 import (
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/rs/zerolog"
+	"go.uber.org/zap"
 	"net/http"
-	"os"
+	"sync"
 	"time"
 )
 
-var (
-	Log *zerolog.Logger
+type (
+	// берём структуру для хранения сведений об ответе
+	responseData struct {
+		status int
+		size   int
+	}
+
+	// добавляем реализацию http.ResponseWriter
+	loggingResponseWriter struct {
+		http.ResponseWriter // встраиваем оригинальный http.ResponseWriter
+		responseData        *responseData
+	}
 )
 
-func init() {
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
-	zerolog.DurationFieldUnit = time.Millisecond
-	consoleLog := zerolog.ConsoleWriter{
-		Out:        os.Stdout,
-		NoColor:    false,
-		TimeFormat: time.DateTime + ".000",
-	}
-	l := zerolog.New(consoleLog).With().Timestamp().Caller().Logger()
-	Log = &l
+var (
+	sLog *zap.SugaredLogger
+	once sync.Once
+)
+
+func (r *loggingResponseWriter) Write(b []byte) (int, error) {
+	// записываем ответ, используя оригинальный http.ResponseWriter
+	size, err := r.ResponseWriter.Write(b)
+	r.responseData.size += size // захватываем размер
+	return size, err
 }
 
-func SetLevel(s string) {
-	v, err := zerolog.ParseLevel(s)
-	if err != nil {
-		Log.Warn().Err(err).Msg("invalid log level specified")
-	}
-	zerolog.SetGlobalLevel(v)
+func (r *loggingResponseWriter) WriteHeader(statusCode int) {
+	// записываем код статуса, используя оригинальный http.ResponseWriter
+	r.ResponseWriter.WriteHeader(statusCode)
+	r.responseData.status = statusCode // захватываем код статуса
+}
+
+func getLogger() *zap.SugaredLogger {
+	once.Do(func() {
+		logger, err := zap.NewDevelopment()
+		if err != nil {
+			panic(err)
+		}
+		sLog = logger.Sugar()
+	})
+	return sLog
 }
 
 func LoggerHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		// to get response data
-		ww := middleware.NewWrapResponseWriter(writer, request.ProtoMajor)
-		tStart := time.Now()
-		defer func() {
-			dur := time.Since(tStart)
-			Log.Info().
-				Str("host", request.Host).
-				Str("url", request.URL.Path).
-				Str("method", request.Method).
-				Dur("ms_served", dur).
-				Int("status", ww.Status()).
-				Int("bytes_sent", ww.BytesWritten()).
-				Msg("http request")
-		}()
-		next.ServeHTTP(ww, request)
+		start := time.Now()
+
+		responseData := &responseData{
+			status: 0,
+			size:   0,
+		}
+		lw := loggingResponseWriter{
+			ResponseWriter: writer, // встраиваем оригинальный http.ResponseWriter
+			responseData:   responseData,
+		}
+		next.ServeHTTP(&lw, request) // внедряем реализацию http.ResponseWriter
+
+		duration := time.Since(start)
+
+		sugar := getLogger()
+
+		sugar.Infoln(
+			"uri", request.RequestURI,
+			"method", request.Method,
+			"status", responseData.status, // получаем перехваченный код статуса ответа
+			"duration", duration,
+			"size", responseData.size, // получаем перехваченный размер ответа
+		)
 	})
 }
