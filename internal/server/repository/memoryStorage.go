@@ -52,15 +52,18 @@ func (m *ServerMemStorage) UpdateJSON(metric *entity.Metrics) (*entity.Metrics, 
 	case "counter":
 		if m.Data[metric.ID] == nil {
 			m.Data[metric.ID] = *metric.Delta
-			result.Delta = m.Data[metric.ID].(*int64)
+			val := m.Data[metric.ID].(int64)
+			result.Delta = &val
 			return result, nil
 		}
 		m.Data[metric.ID] = m.Data[metric.ID].(int64) + *metric.Delta
-		result.Delta = m.Data[metric.ID].(*int64)
+		val := m.Data[metric.ID].(int64)
+		result.Delta = &val
 		return result, nil
 	case "gauge":
 		m.Data[metric.ID] = *metric.Value
-		result.Value = m.Data[metric.ID].(*float64)
+		val := m.Data[metric.ID].(float64)
+		result.Value = &val
 		return result, nil
 	default:
 		return nil, fmt.Errorf("wrong type of metric")
@@ -75,13 +78,15 @@ func (m *ServerMemStorage) GetJSON(metric *entity.Metrics) (*entity.Metrics, err
 	switch metric.MType {
 	case "counter":
 		if val, ok := m.Data[metric.ID]; ok {
-			result.Delta = val.(*int64)
+			tempVal := val.(int64)
+			result.Delta = &tempVal
 			return result, nil
 		}
 		return nil, entity.ErrNoFound
 	case "gauge":
 		if val, ok := m.Data[metric.ID]; ok {
-			result.Value = val.(*float64)
+			tempVal := val.(float64)
+			result.Value = &tempVal
 			return result, nil
 		}
 		return nil, entity.ErrNoFound

@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -54,7 +53,7 @@ func TestSendMetrics(t *testing.T) {
 			}))
 			defer server.Close()
 
-			req := server.URL + "/update/" + tc.req.datatype + fmt.Sprintf("/%v/%v", tc.req.key, tc.req.value)
+			req := server.URL + "/update/"
 			ms := NewAgentMemStorage()
 			err := ms.SendMetrics(req)
 			assert.Equal(t, tc.wanterr, err)
