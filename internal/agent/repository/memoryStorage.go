@@ -1,7 +1,10 @@
 package repository
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"github.com/gtgaleevtimur/metrics-alertings/internal/agent/entity"
 	"io"
 	"math/rand"
 	"net/http"
@@ -11,7 +14,10 @@ import (
 	"github.com/gojek/heimdall/v7/httpclient"
 )
 
-var contentType = http.Header{"Content-type": {"text/plain"}}
+var (
+	contentTypeTextPlain = http.Header{"Content-type": {"text/plain"}}
+	contentTypeJSON      = http.Header{"Content-type": {"application/json"}}
+)
 
 type AgentMemStorage struct {
 	Gauge   map[string]float64
@@ -61,9 +67,18 @@ func (m *AgentMemStorage) UpdateMemStorage() {
 
 func (m *AgentMemStorage) SendMetrics(addr string) error {
 	for k, v := range m.Gauge {
-		req := fmt.Sprintf("%sgauge/%v/%v", addr, k, v)
+		m := entity.Metrics{
+			ID:    k,
+			MType: "gauge",
+			Value: &v,
+		}
+		reqBody, err := json.Marshal(m)
+		if err != nil {
+			return err
+		}
+		req := fmt.Sprintf("%supdate/", addr)
 		client := httpclient.NewClient(httpclient.WithHTTPTimeout(1000 * time.Millisecond))
-		res, err := client.Post(req, nil, contentType)
+		res, err := client.Post(req, bytes.NewReader(reqBody), contentTypeJSON)
 		if err != nil {
 			return err
 		}
@@ -80,9 +95,18 @@ func (m *AgentMemStorage) SendMetrics(addr string) error {
 		res.Body.Close()
 	}
 	for k, v := range m.Counter {
-		req := fmt.Sprintf("%scounter/%v/%v", addr, k, v)
+		m := entity.Metrics{
+			ID:    k,
+			MType: "counter",
+			Delta: &v,
+		}
+		reqBody, err := json.Marshal(m)
+		if err != nil {
+			return err
+		}
+		req := fmt.Sprintf("%supdate/", addr)
 		client := httpclient.NewClient(httpclient.WithHTTPTimeout(1000 * time.Millisecond))
-		res, err := client.Post(req, nil, contentType)
+		res, err := client.Post(req, bytes.NewReader(reqBody), contentTypeJSON)
 		if err != nil {
 			return err
 		}
