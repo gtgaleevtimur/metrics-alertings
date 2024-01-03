@@ -3,7 +3,6 @@ package handler
 import (
 	"go.uber.org/zap"
 	"net/http"
-	"sync"
 	"time"
 )
 
@@ -22,9 +21,16 @@ type (
 )
 
 var (
-	sLog *zap.SugaredLogger
-	once sync.Once
+	sugar *zap.SugaredLogger
 )
+
+func init() {
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+	sugar = logger.Sugar()
+}
 
 func (r *loggingResponseWriter) Write(b []byte) (int, error) {
 	// записываем ответ, используя оригинальный http.ResponseWriter
@@ -37,17 +43,6 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 	// записываем код статуса, используя оригинальный http.ResponseWriter
 	r.ResponseWriter.WriteHeader(statusCode)
 	r.responseData.status = statusCode // захватываем код статуса
-}
-
-func getLogger() *zap.SugaredLogger {
-	once.Do(func() {
-		logger, err := zap.NewDevelopment()
-		if err != nil {
-			panic(err)
-		}
-		sLog = logger.Sugar()
-	})
-	return sLog
 }
 
 func LoggerHandler(next http.Handler) http.Handler {
@@ -66,8 +61,6 @@ func LoggerHandler(next http.Handler) http.Handler {
 
 		duration := time.Since(start)
 
-		sugar := getLogger()
-
 		sugar.Infoln(
 			"uri", request.RequestURI,
 			"method", request.Method,
@@ -75,5 +68,6 @@ func LoggerHandler(next http.Handler) http.Handler {
 			"duration", duration,
 			"size", responseData.size, // получаем перехваченный размер ответа
 		)
+		sugar.Sync()
 	})
 }
