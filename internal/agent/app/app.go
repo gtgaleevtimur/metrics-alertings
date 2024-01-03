@@ -20,7 +20,7 @@ func Run() {
 	}()
 	for {
 		time.Sleep(conf.ReportInterval)
-		if err := storager.SendMetrics(strings.Join([]string{conf.ServerAddress, "/update/"}, "")); err != nil {
+		if err := storager.SendMetrics(strings.Join([]string{conf.ServerAddress, "/"}, "")); err != nil {
 			log.Fatal(err)
 		}
 	}
