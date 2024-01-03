@@ -3,8 +3,6 @@ package handler
 import (
 	"fmt"
 	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
-
 	"github.com/gtgaleevtimur/metrics-alertings/internal/server/repository"
 	"net/http"
 	"strconv"
@@ -13,10 +11,7 @@ import (
 func NewServerRouter(repository repository.ServerStorager) *chi.Mux {
 	controller := newServerHandler(repository)
 	router := chi.NewRouter()
-	router.Use(middleware.RequestID)
-	router.Use(middleware.RealIP)
-	router.Use(middleware.Logger)
-	router.Use(middleware.Recoverer)
+	router.Use(LoggerHandler)
 	router.Get("/", controller.MainPage)
 	router.Post("/update/{type}/{metric}/{value}", controller.UpdateMetric)
 	router.Get("/value/gauge/{metric}", controller.GetMetric)
