@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/gtgaleevtimur/metrics-alertings/internal/server/entity"
@@ -135,6 +136,9 @@ func (h *ServerHandler) GetMetricJSON(res http.ResponseWriter, req *http.Request
 	}
 	result, err := h.Repository.GetJSON(&m)
 	if err != nil {
+		if errors.Is(err, entity.ErrNoFound) {
+			http.Error(res, err.Error(), http.StatusNotFound)
+		}
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 	}
 	response, err := json.Marshal(result)
