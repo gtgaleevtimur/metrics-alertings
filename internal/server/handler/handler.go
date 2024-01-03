@@ -13,6 +13,8 @@ import (
 func NewServerRouter(repository repository.ServerStorager) *chi.Mux {
 	controller := newServerHandler(repository)
 	router := chi.NewRouter()
+	router.Use(middleware.RequestID)
+	router.Use(middleware.RealIP)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 	router.Get("/", controller.MainPage)
