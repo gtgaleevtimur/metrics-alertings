@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"fmt"
 	"go.uber.org/zap"
+	"io"
 	"net/http"
 	"time"
 )
@@ -48,6 +50,8 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 func LoggerHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		start := time.Now()
+		preBody, _ := io.ReadAll(request.Body)
+		fmt.Println("PRE", string(preBody))
 
 		responseData := &responseData{
 			status: 0,
@@ -60,6 +64,8 @@ func LoggerHandler(next http.Handler) http.Handler {
 		next.ServeHTTP(&lw, request) // внедряем реализацию http.ResponseWriter
 
 		duration := time.Since(start)
+		afterBody, _ := io.ReadAll(request.Body)
+		fmt.Println("AFTER", string(afterBody))
 
 		sugar.Infoln(
 			"uri", request.RequestURI,
