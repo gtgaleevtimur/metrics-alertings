@@ -92,6 +92,11 @@ func (m *AgentMemStorage) SendMetrics(addr string) error {
 				res.Status,
 				line)
 		}
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			return error(err)
+		}
+		fmt.Println("response Body:", string(body))
 		res.Body.Close()
 	}
 	for k, v := range m.Counter {
@@ -120,6 +125,11 @@ func (m *AgentMemStorage) SendMetrics(addr string) error {
 				res.Status,
 				line)
 		}
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			return error(err)
+		}
+		fmt.Println("response Body:", string(body))
 		res.Body.Close()
 	}
 	return nil
