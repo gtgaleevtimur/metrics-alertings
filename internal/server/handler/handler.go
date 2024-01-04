@@ -1,21 +1,30 @@
 package handler
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-chi/chi"
+	"github.com/gtgaleevtimur/metrics-alertings/internal/server/entity"
 	"github.com/gtgaleevtimur/metrics-alertings/internal/server/repository"
 	"net/http"
 	"strconv"
 )
 
+const contentTypeJSON = "application/json"
+
 func NewServerRouter(repository repository.ServerStorager) *chi.Mux {
 	controller := newServerHandler(repository)
 	router := chi.NewRouter()
-	router.Use(LoggerHandler)
+	router.Use(LoggerHandlerMiddleware())
 	router.Get("/", controller.MainPage)
 	router.Post("/update/{type}/{metric}/{value}", controller.UpdateMetric)
 	router.Get("/value/gauge/{metric}", controller.GetMetric)
 	router.Get("/value/counter/{metric}", controller.GetMetric)
+
+	router.Post("/update/", controller.UpdateMetricJSON)
+	router.Post("/value/", controller.GetMetricJSON)
+
 	router.MethodNotAllowedHandler()
 	router.NotFoundHandler()
 	return router
@@ -94,4 +103,49 @@ func (h *ServerHandler) GetMetric(res http.ResponseWriter, req *http.Request) {
 	}
 	res.WriteHeader(http.StatusOK)
 	res.Write([]byte(fmt.Sprintf("%v", v)))
+}
+
+func (h *ServerHandler) UpdateMetricJSON(res http.ResponseWriter, req *http.Request) {
+	if req.Header.Get("Content-Type") != contentTypeJSON {
+		http.Error(res, "wrong content type", http.StatusBadRequest)
+	}
+	var m entity.Metrics
+	if err := json.NewDecoder(req.Body).Decode(&m); err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+	}
+	result, err := h.Repository.UpdateJSON(&m)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
+	response, err := json.Marshal(result)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
+	res.Header().Set("Content-Type", contentTypeJSON)
+	res.WriteHeader(http.StatusOK)
+	res.Write(response)
+}
+
+func (h *ServerHandler) GetMetricJSON(res http.ResponseWriter, req *http.Request) {
+	if req.Header.Get("Content-Type") != contentTypeJSON {
+		http.Error(res, "wrong content type", http.StatusBadRequest)
+	}
+	var m entity.Metrics
+	if err := json.NewDecoder(req.Body).Decode(&m); err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+	}
+	result, err := h.Repository.GetJSON(&m)
+	if err != nil {
+		if errors.Is(err, entity.ErrNoFound) {
+			http.Error(res, err.Error(), http.StatusNotFound)
+		}
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
+	response, err := json.Marshal(result)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
+	res.Header().Set("Content-Type", contentTypeJSON)
+	res.WriteHeader(http.StatusOK)
+	res.Write(response)
 }
