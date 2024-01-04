@@ -16,7 +16,8 @@ const contentTypeJSON = "application/json"
 func NewServerRouter(repository repository.ServerStorager) *chi.Mux {
 	controller := newServerHandler(repository)
 	router := chi.NewRouter()
-	router.Use(LoggerHandler)
+	//router.Use(LoggerHandler)
+	router.Use(LogRequestResponse())
 	router.Get("/", controller.MainPage)
 	router.Post("/update/{type}/{metric}/{value}", controller.UpdateMetric)
 	router.Get("/value/gauge/{metric}", controller.GetMetric)
